@@ -1,0 +1,4 @@
+# Arduino .gitignore
+
+video/
+_ignore_*
