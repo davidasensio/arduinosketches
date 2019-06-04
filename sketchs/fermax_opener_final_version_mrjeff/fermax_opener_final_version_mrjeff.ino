@@ -1,6 +1,5 @@
 /*
     David Asensio May 2019
-
     Arduino Sketch for trigger actuators via Wifi
     Control the Fermax phone by using webserver
 */
@@ -11,14 +10,26 @@
 #include <ESP8266mDNS.h>
 #include <Servo.h>
 
-#define PIN_SERVO D5
+#define PIN_SERVO D3
+#define PIN_RELE D9
 #define DELAY_MS 5000
 
 MDNSResponder mdns;
 
 // Replace with your network credentials
 const char* ssid = "mrjeff_WW";
-const char* password = "mrjeffjavi";
+const char* password = "*****";
+
+IPAddress ip(192, 168, 1, 30);
+// the router's gateway address:
+IPAddress gateway(192, 168, 1, 1);
+// the subnet:
+IPAddress subnet(255, 255, 0, 0);
+
+IPAddress dns1(192, 168, 1, 1);
+IPAddress dns2(192, 168, 1, 1);
+
+//WiFi.config(ip, gateway, subnet,subnet);
 
 ESP8266WebServer server(80);
 String webSite = "";
@@ -59,7 +70,7 @@ void setup(void) {
   webSite += "<!DOCTYPE html>\n";
   webSite += "<html>\n";
   webSite += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-  webSite += "    <title>MrJeff - Door Bell</title>\n";
+  webSite += "    <title>MrJeff - Doorbell</title>\n";
   webSite += "    <style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
   webSite += "  body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}\n";
   webSite += "  .button {display: block;width: 80px;background-color: #3498db;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 36px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
@@ -69,6 +80,7 @@ void setup(void) {
   webSite += "  .button-off:active {background-color: #2c3e50;}\n";
   webSite += "  p {font-size: 14px;color: #888;margin-bottom: 10px;}\n";
   webSite += "</style>\n";
+  webSite += "<link rel = \"icon\" type = \"image/png\" href = \"https://cdn6.aptoide.com/imgs/8/1/0/810250b7da118fe23379d37d40327690_icon.png\">\n";
   webSite += "    <script>window.onload = function() {if (location.href.indexOf(\"open\") != -1) {document.getElementById('buttonOff').click();} }</script>\n";
   webSite += "</head>\n";
   webSite += "<body>\n";
@@ -82,11 +94,16 @@ void setup(void) {
   webSite += "</html>\n";
 
   // preparing GPIOs
-  pinMode(PIN_SERVO, OUTPUT);
-  digitalWrite(PIN_SERVO, LOW);
+  // pinMode(PIN_SERVO, OUTPUT);
+  // digitalWrite(PIN_SERVO, LOW);
+
+  pinMode(PIN_RELE, OUTPUT);
+  digitalWrite(PIN_RELE, HIGH);
 
   // Attach servo
-  servo.attach(PIN_SERVO);
+  // servo.attach(PIN_SERVO);
+
+  WiFi.config(ip, gateway, subnet, dns1, dns2);
 
   Serial.begin(115200);
   WiFi.begin(ssid, password);
@@ -128,6 +145,7 @@ void setup(void) {
 void loop(void) {
   server.handleClient();
 
+  digitalWrite(PIN_RELE, HIGH);
   if (WiFi.status() != WL_CONNECTED)
   {
 
@@ -145,10 +163,12 @@ void loop(void) {
   }
 
   if (button5Reading != button5LastReading) {
-    servoPush();
+    Serial.println("Dentro");
+    // servoPush();
+    digitalWrite(PIN_RELE, LOW);
+    delay(500);
+    digitalWrite(PIN_RELE, HIGH);
     button5LastReading = button5Reading;
     lastEvent = millis();
   }
 }
-
-
